@@ -1,0 +1,65 @@
+
+name: Windows Cloud PC - AnyDesk (Optimized)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Starting Windows PC...
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+      - name: Check Windows System
+        shell: powershell
+        run: |
+          Write-Host "Windows Cloud PC iniciado!"
+          Get-ComputerInfo |
+            Select-Object WindowsProductName,
+                          WindowsVersion
+
+      - name: Start AnyDesk
+        shell: powershell
+        run: |
+          $service = Get-Service -Name "AnyDesk" `
+            -ErrorAction SilentlyContinue
+
+          if ($service) {
+            if ($service.Status -ne "Running") {
+              Start-Service -Name "AnyDesk"
+            }
+            Write-Host "AnyDesk iniciado!"
+          }
+          else {
+            Write-Host "AnyDesk não encontrado."
+            exit 1
+          }
+
+      - name: Verify AnyDesk
+        shell: powershell
+        run: |
+          Start-Sleep -Seconds 10
+
+          $process = Get-Process -Name "AnyDesk" `
+            -ErrorAction SilentlyContinue
+
+          if ($process) {
+            Write-Host "AnyDesk está funcionando!"
+          }
+          else {
+            Write-Host "AnyDesk não está ativo."
+            exit 1
+          }
+
+      - name: System Information
+        shell: powershell
+        run: |
+          Write-Host "CPU:"
+          Get-CimInstance Win32_Processor |
+            Select-Object Name
+
+          Write-Host "RAM:"
+          Get-CimInstance Win32_ComputerSystem |
+            Select-Object TotalPhysicalMemory
+
+          Write-Host "PC iniciado com sucesso!"
